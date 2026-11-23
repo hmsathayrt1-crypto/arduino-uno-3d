@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>أردوينو أونو — نموذج ثلاثي الأبعاد تفاعلي</title>
+<meta name="description" content="نموذج أردوينو أونو R3 ثلاثي الأبعاد مبني بالكامل بـ three.js: دوّر اللوحة، مرّر فوق الدبابيس لتعرف وظيفتها، وشغّل مثال Blink." />
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2300979d'/%3E%3Ccircle cx='11' cy='11' r='3' fill='%23f2ede4'/%3E%3Ccircle cx='21' cy='21' r='3' fill='%23f2ede4'/%3E%3C/svg%3E" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Alexandria:wght@300;400;600;800&family=IBM+Plex+Sans+Arabic:wght@300;400;500;700&family=IBM+Plex+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+
+<canvas id="scene" aria-label="نموذج ثلاثي الأبعاد للوحة أردوينو أونو"></canvas>
+
+<!-- علامات زوايا листّ الرسم -->
+<div class="corner tl" aria-hidden="true"></div>
+<div class="corner tr" aria-hidden="true"></div>
+<div class="corner bl" aria-hidden="true"></div>
+<div class="corner br" aria-hidden="true"></div>
+
+<header class="hud brand">
+  <p class="eyebrow">ورقة مواصفات · نموذج تفاعلي</p>
+  <h1>أردوينو <em>أونو</em></h1>
+  <p class="sub">لوحة تطوير ATmega328P — مرّر فوق أي دبوس لتعرف وظيفته، واسحب لتدوير اللوحة.</p>
+  <ul class="specs">
+    <li><b>16</b><span>ميغاهرتز</span></li>
+    <li><b>14</b><span>دخل/خرج رقمي</span></li>
+    <li><b>6</b><span>قنوات تناظرية</span></li>
+    <li><b>5</b><span>فولت منطق</span></li>
+  </ul>
+</header>
+
+<aside class="hud pin-card" id="pinCard" aria-live="polite">
+  <div class="pin-head">
+    <span class="pin-chip" id="pinChip">—</span>
+    <span class="pin-kind" id="pinKind">دليل الدبابيس</span>
+  </div>
+  <h2 id="pinName">استكشف اللوحة</h2>
+  <p id="pinDesc">اضغط أو مرّر فوق أي دبوس على اللوحة لتظهر بطاقته ووظيفته.</p>
+</aside>
+
+<div class="hud dock" role="toolbar" aria-label="أدوات العرض">
+  <button class="btn primary" id="btnPower" aria-pressed="false">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v8M6.2 6.6a8 8 0 1 0 11.6 0" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>
+    <span>شغّل Blink</span>
+  </button>
+  <button class="btn" id="btnRotate" aria-pressed="true">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.4-5.7M20 3.5V8h-4.5" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <span>دوران تلقائي</span>
+  </button>
+  <button class="btn" id="btnExplode" aria-pressed="false">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v5M12 16v5M4.5 7.5l3.2 2.6M16.3 13.9l3.2 2.6M19.5 7.5l-3.2 2.6M7.7 13.9l-3.2 2.6" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
+    <span>عرض مفكّك</span>
+  </button>
+  <button class="btn" id="btnReset">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4.5M4 4.5H8.5M4.6 5.4A8 8 0 1 1 4 12" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <span>إعادة الضبط</span>
+  </button>
+</div>
+
+<p class="hud hint">اسحب للتدوير · عجلة الفأرة للتقريب · <kbd>مسافة</kbd> تشغيل · <kbd>E</kbd> تفكيك</p>
+
+<section class="hud code-panel" id="codePanel" hidden>
+  <header>
+    <div>
+      <h3>الشيفرة المعروضة على اللوحة</h3>
+      <p class="code-note">الدبوس 13 مربوط بالمصباح L — نفس الوميض الذي تراه عند الضغط على «شغّل Blink».</p>
+    </div>
+    <button id="btnCloseCode" aria-label="إغلاق">×</button>
+  </header>
+  <pre dir="ltr"><code id="codeBody"></code></pre>
+</section>
+
+<div class="loader" id="loader">
+  <div class="loader-bar"><i></i></div>
+  <p>يجري تجهيز اللوحة…</p>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "./vendor/three.module.min.js",
+    "three/addons/": "./vendor/addons/"
+  }
+}
+</script>
+<script type="module" src="./main.js"></script>
+</body>
+</html>
